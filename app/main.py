@@ -5,6 +5,12 @@ from langchain.chat_models import init_chat_model
 from langchain_cohere import CohereEmbeddings
 from langchain_chroma import Chroma
 from pathlib import Path
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama import ChatOllama
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 BASE_DIR = Path(__file__).resolve().parent
 pdf_path = BASE_DIR / "documents" / "reports" / "report1.pdf"
@@ -12,9 +18,6 @@ pdf_path = BASE_DIR / "documents" / "reports" / "report1.pdf"
 if not pdf_path.exists():
     raise FileNotFoundError(f"PDF not found at: {pdf_path}")
 
-from dotenv import load_dotenv
-
-load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
@@ -26,12 +29,8 @@ if not GOOGLE_API_KEY or not LANGSMITH_API_KEY or not COHERE_KEY:
     exit(1)
 
 
-#LLM
-llm = init_chat_model(
-    "gemini-1.5-pro",
-    model_provider="google_genai",
-    google_api_key=GOOGLE_API_KEY,
-)
+# #LLM
+llm = ChatOllama(model="llama3.1")
 
 #Embeddings - Cohere
 embeddings = CohereEmbeddings(model="embed-english-v3.0" , cohere_api_key=COHERE_KEY)
@@ -57,12 +56,12 @@ async def load_pages_async(loader):
         pages.append(page)
     return pages
 
-print("Loaded documents.")
-# print(f"{documents[0].metadata}\n")
-# print(documents[1].page_content)
+# print("Loaded documents.")
+# # print(f"{documents[0].metadata}\n")
+# # print(documents[1].page_content)
 
 
-#Chunking (Later -> recursive splitter + semantic splitter)
+# #Chunking (Later -> recursive splitter + semantic splitter)
 
 recursive_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,       
@@ -70,7 +69,31 @@ recursive_splitter = RecursiveCharacterTextSplitter(
     separators=["\n\n", "\n", ".", " ", ""]
 )
 
-documents = recursive_splitter.split_documents(documents)
+all_splits = recursive_splitter.split_documents(documents)
 
-# print(f"Number of chunks: {len(documents)}")
-# print(f"Chunk content: {(documents[0].page_content)}")
+# # print(f"Number of chunks: {len(all_splits)}")
+# # print(f"Chunk content: {( all_splits[0].page_content)}")
+
+
+# # embed and store
+document_ids = vector_store.add_documents(documents=all_splits)
+print(document_ids[:3]) # ID of vector chunks in chroma
+
+
+
+# RETREIVAL AND GENERATION
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a coastal research assistant trained to answer oceanographic and ecological questions."),
+    ("human", "{question}")
+])
+
+# Format user question
+question = "What algae bloom events were reported in India in March 2024?"
+messages = prompt.format_messages(question=question)
+
+# Call Gemini
+response = llm.invoke(messages)
+
+print(response.content)
+
