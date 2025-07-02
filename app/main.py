@@ -2,11 +2,14 @@ import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.chat_models import init_chat_model
+from langchain_core.documents import Document
+from typing_extensions import List, TypedDict
 from langchain_cohere import CohereEmbeddings
 from langchain_chroma import Chroma
 from pathlib import Path
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
+from langgraph.graph import START, StateGraph
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,7 +48,7 @@ vector_store = Chroma(
 print("Vector store created.")
 
 
-#load the data
+# #load the data
 
 loader = PyPDFLoader(str(pdf_path))
 documents = loader.load_and_split()
@@ -56,7 +59,7 @@ async def load_pages_async(loader):
         pages.append(page)
     return pages
 
-# print("Loaded documents.")
+# # print("Loaded documents.")
 # # print(f"{documents[0].metadata}\n")
 # # print(documents[1].page_content)
 
@@ -71,29 +74,32 @@ recursive_splitter = RecursiveCharacterTextSplitter(
 
 all_splits = recursive_splitter.split_documents(documents)
 
-# # print(f"Number of chunks: {len(all_splits)}")
-# # print(f"Chunk content: {( all_splits[0].page_content)}")
+# print(f"Number of chunks: {len(all_splits)}")
+# print(f"Chunk content: {( all_splits[0].page_content)}")
 
 
-# # embed and store
+# # # embed and store
 document_ids = vector_store.add_documents(documents=all_splits)
-print(document_ids[:3]) # ID of vector chunks in chroma
-
+# print(document_ids[:3]) # ID of vector chunks in chroma
 
 
 # RETREIVAL AND GENERATION
 
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a coastal research assistant trained to answer oceanographic and ecological questions."),
-    ("human", "{question}")
+question = "What types of data does INCOIS collect and how is it distributed to users?"
+
+retrieved_docs = vector_store.similarity_search(question, k=2) # Top 2 similar chunks
+
+context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+
+prompt_template = ChatPromptTemplate.from_messages([
+    ("system", "You are a coastal research assistant trained to answer oceanographic and ecological questions based on given documents."),
+    ("human", "Context: {context}\n\nQuestion: {question}")
 ])
 
-# Format user question
-question = "What algae bloom events were reported in India in March 2024?"
-messages = prompt.format_messages(question=question)
+messages = prompt_template.format_messages(context=context, question=question)
+print(context)
 
-# Call Gemini
 response = llm.invoke(messages)
 
-print(response.content)
+print("Answer:", response.content)
 
