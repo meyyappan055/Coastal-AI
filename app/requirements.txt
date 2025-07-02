@@ -6,3 +6,5 @@ dotenv
 langchain-google-genai
 langchain-chroma
 langchain-cohere
+pypdf
+pathlib
