@@ -11,3 +11,4 @@ pathlib
 langchain-ollama
 sentence-transformers
 langchain-huggingface
+openai 

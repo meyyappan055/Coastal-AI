@@ -1,7 +1,7 @@
 from RAG.pipeline import load_documents, chunk_documents, get_vectorstore, get_llm, retrieve_answer
 from RAG.utils import get_prompt_template
 
-question = "frequency of Noctiluca blooms is high in which months?? "
+question = "frequency of Noctiluca blooms is high in which months??"
 
 documents = load_documents()
 chunks = chunk_documents(documents)

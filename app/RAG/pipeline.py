@@ -4,6 +4,13 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_ollama import ChatOllama
 from RAG.config import DOCS_PATH
+from langchain.chat_models import ChatOpenAI
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+GROQ_KEY = os.getenv("GROQ_KEY")
 
 
 def load_documents():
@@ -15,7 +22,7 @@ def load_documents():
 
 
 def chunk_documents(documents):
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     chunks = splitter.split_documents(documents)
     return chunks
 
@@ -42,17 +49,22 @@ def get_vectorstore(docs):
 
     return vector_store
 
+
 def get_llm():
-    return ChatOllama(model="llama3.1")
+    return ChatOpenAI(
+        model_name="llama3-8b-8192",  
+        base_url="https://api.groq.com/openai/v1",
+        openai_api_key= GROQ_KEY
+    )
 
 
 
-def retrieve_answer(vector_store, llm, prompt, question, k=3):
+def retrieve_answer(vector_store, llm, prompt, question, k=2):
     question = f"query: {question}"
     retrieved_docs = vector_store.max_marginal_relevance_search(
         question,
         k=k,
-        fetch_k=30,
+        fetch_k=5,
         lambda_mult=0.7
     )
   
