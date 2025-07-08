@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-PDF_PATH = BASE_DIR / "documents" / "reports" / "report1.pdf"
+DOCS_PATH = BASE_DIR / "documents"
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")

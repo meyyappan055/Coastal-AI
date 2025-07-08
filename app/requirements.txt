@@ -9,3 +9,5 @@ langchain-cohere
 pypdf
 pathlib
 langchain-ollama
+sentence-transformers
+langchain-huggingface
