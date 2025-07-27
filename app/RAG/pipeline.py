@@ -58,7 +58,6 @@ def get_llm():
     )
 
 
-
 def retrieve_answer(vector_store, llm, prompt, question, k=2):
     question = f"query: {question}"
     retrieved_docs = vector_store.max_marginal_relevance_search(
@@ -67,12 +66,9 @@ def retrieve_answer(vector_store, llm, prompt, question, k=2):
         fetch_k=5,
         lambda_mult=0.7
     )
-  
-    for i, doc in enumerate(retrieved_docs):
-        print(f"[{i+1}] {doc.page_content[:200]}...\n")
 
     context = "\n\n".join([doc.page_content for doc in retrieved_docs])
-    messages = prompt.format_messages(context=context, question=question) 
+    messages = prompt.format_messages(context=context, question=question)
     response = llm.invoke(messages)
 
-    return response.content, context
+    return response.content, retrieved_docs
