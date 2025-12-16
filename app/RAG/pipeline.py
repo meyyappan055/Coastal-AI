@@ -2,9 +2,9 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
+from langchain_openai import ChatOpenAI 
 from langchain_ollama import ChatOllama
 from RAG.config import DOCS_PATH
-from langchain.chat_models import ChatOpenAI
 import os
 from dotenv import load_dotenv
 
@@ -52,9 +52,9 @@ def get_vectorstore(docs):
 
 def get_llm():
     return ChatOpenAI(
-        model_name="llama3-8b-8192",  
+        model="llama-3.3-70b-versatile",  
         base_url="https://api.groq.com/openai/v1",
-        openai_api_key= GROQ_KEY
+        api_key=GROQ_KEY  
     )
 
 
